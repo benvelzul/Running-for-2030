@@ -1,11 +1,10 @@
 from tkinter import *
-from tkinter import messagebox
 from Levels import all_levels as LEVELS
 import tkinter as tk
-from random import randint
 from PIL import Image, ImageTk
-import time
 import pandas as pd
+import time
+from random import randint
 
 class SDG_App:
     class Applayout:
@@ -52,7 +51,7 @@ class SDG_App:
                 self.Mazegame = SDG_App.Mazegame()
                 self.is_multiplayer = False
 
-        def layout(self, master, theme, mode= 0, current_wall_index=0, current_character_index=0):
+        def layout(self, master, theme, mode= 0, current_wall_index=0, current_character_index=0, event=None):
             self.current_theme = theme
             self.master = master
             self.mode = mode
@@ -73,8 +72,8 @@ class SDG_App:
             self.layout_canvas.place(x=0, y=0)
 
             # Update text colors according to theme
-            self.layout_canvas.create_text(350, 100, text="Running for 2030", font=("Comic Sans MS", 25), fill=theme["text"])
-            self.layout_canvas.create_text(350, 50, text=f"Level: {self.mode+1}", font=("Comic Sans MS", 15), fill=theme["text"])
+            self.layout_canvas.create_text(350, 150, text="Running for 2030", font=("Comic Sans MS", 25), fill=theme["text"])
+            self.layout_canvas.create_text(350, 220, text=f"Level: {self.mode+1}", font=("Comic Sans MS", 15), fill=theme["text"])
 
             # buttons needed
             play_button = Button(
@@ -100,23 +99,12 @@ class SDG_App:
             level_button = Button(master, text="Level \nselection", height=2, width=9, command=self.level_selection_layout, font=("Comic Sans MS", 11), bg=theme["button"], fg=theme["text"])
 
             # putting the buttons in Canvas
-            self.layout_canvas.create_window(350, 200, window=play_button)
-            self.layout_canvas.create_window(670, 30, window=settings_button)
-            self.layout_canvas.create_window(175, 200, window=customize_button)
-            self.layout_canvas.create_window(525, 200, window=level_button)
+            self.layout_canvas.create_window(350, 300, window=play_button)
+            self.layout_canvas.create_window(665, 35, window=settings_button)
+            self.layout_canvas.create_window(175, 300, window=customize_button)
+            self.layout_canvas.create_window(525, 300, window=level_button)
 
-            # explanation text
-            self.layout_canvas.create_text(350, 295, anchor="s", text="INSTRUCTIONS", font=("Comic Sans MS", 12), fill=theme["text"])
-            self.layout_canvas.create_text(350, 310, anchor="n", width=650, font=("Comic Sans MS", 10), fill=theme["text"],text="""Welcome, Agent of Change! Your mission is to navigate the maze and collect items that represent the United Nations' Sustainable Development Goals (SDGs). Use the following keys to move your avatar:
-
-    ↑ (Up Arrow): Move your avatar one step upwards.
-    ↓ (Down Arrow): Move your avatar one step downwards.
-    ← (Left Arrow): Move your avatar one step to the left.
-    → (Right Arrow): Move your avatar one step to the right.
-
-As you explore the maze, keep an eye out for glowing icons. Each icon represents a different SDG. To collect an item, simply move your avatar over it. Once collected, the icon will disappear from the maze, and your collection counter for that SDG will increase.
-
-Be strategic in your movements! Some paths might lead to dead ends, while others hold multiple SDG items. Your ultimate goal is to collect as many different SDG items as possible within the given time or move limit. Good luck, the future of our planet is in your hands!""")
+            self.layout_canvas.create_text(350, 400, anchor="n", width=650, font=("Comic Sans MS", 16), fill=theme["text"],text="By: Benjamin Velez Zuluaga and Zander Setiawan")
 
         def load_images(self):
 
@@ -127,8 +115,8 @@ Be strategic in your movements! Some paths might lead to dead ends, while others
                 ImageTk.PhotoImage((Image.open(r"Images\Wall #3.jpg").resize((50, 50))), Image.Resampling.LANCZOS),
                 ImageTk.PhotoImage((Image.open(r"Images\Wall #4.jpg").resize((50, 50))), Image.Resampling.LANCZOS)
             ]
-            self.char1_frames = [(PhotoImage(file=r"Images\Character #2.gif", format=f'gif -index {i}')).zoom(2) for i in range(self.frameCnt)]
-            self.char2_frames = [(PhotoImage(file=r"Images\llama.gif", format=f'gif -index {i}')).zoom(1) for i in range(self.frameCnt)]
+            self.char1_frames = self.load_gif_frames(r"Images\Character #1.gif")
+            self.char2_frames = self.load_gif_frames(r"Images\Character #2.gif")
             self.character_images = [self.char1_frames, self.char2_frames]
 
             # other images
@@ -140,6 +128,18 @@ Be strategic in your movements! Some paths might lead to dead ends, while others
             self.volume_on_img = (PhotoImage(file=r"Images\volume_on.png")).subsample(4)
             self.volume_off_img = (PhotoImage(file=r"Images\volume_off.png")).subsample(4)
 
+        def load_gif_frames(self, path):
+            gif = Image.open(path)
+            frames = []
+            try:
+                for i in range(self.frameCnt):
+                    gif.seek(i)
+                    frame = gif.copy()
+                    frames.append(ImageTk.PhotoImage(frame.resize((70, 70))))
+            except EOFError:
+                pass
+            return frames
+
         def setting_layout(self):  # when settings button pressed
             theme = self.themes[self.current_theme]
             self.settings_canvas = Canvas(self.master, height=300, width=400, bg=theme["overlap"])
@@ -147,8 +147,11 @@ Be strategic in your movements! Some paths might lead to dead ends, while others
             self.settings_canvas.create_text(200, 50, text="Settings", font=("Helvetica", 14), fill=theme["text"])
     
             # Update buttons with theme
-            back_button = Button(self.settings_canvas, text="Back", command=lambda: self.show_main_layout(self.settings_canvas),bg=theme["button"], fg=theme["text"])
+            back_button = Button(self.settings_canvas, text="Confirm", command=lambda: self.show_main_layout(self.settings_canvas),bg=theme["button"], fg=theme["text"])
             credits_button = Button(self.settings_canvas, text="Credits", command=None, bg=theme["button"], fg=theme["text"])
+            instructions_button = Button(self.settings_canvas, text="Instructions", command=self.instructions_layout, bg=theme["button"], fg=theme["text"])
+            purpose_button = Button(self.settings_canvas, text="Purpose", command=None, bg=theme["button"], fg=theme["text"])
+            about_button = Button(self.settings_canvas, text="About", command=None, bg=theme["button"], fg=theme["text"])
 
             #lists for animation and buttons
             self.music_list = [self.music_img, self.no_music_img]
@@ -160,9 +163,43 @@ Be strategic in your movements! Some paths might lead to dead ends, while others
 
             #updating buttons
             self.settings_canvas.create_window(200, 250, window=back_button)
-            self.settings_canvas.create_window(50, 100, window=credits_button)
-            self.settings_canvas.create_window(150, 200, window= self.music_button)
-            self.settings_canvas.create_window(250, 200, window= self.volume_button)
+            self.settings_canvas.create_window(85, 100, window=credits_button)
+            self.settings_canvas.create_window(165, 100, window=instructions_button)
+            self.settings_canvas.create_window(260, 100, window=purpose_button)
+            self.settings_canvas.create_window(325, 100, window=about_button)
+            self.settings_canvas.create_window(150, 170, window= self.music_button)
+            self.settings_canvas.create_window(250, 170, window= self.volume_button)
+
+        def instructions_layout(self):
+            theme = self.themes[self.current_theme]
+            self.instructions_canvas = Canvas(self.master, height=300, width=400, bg=theme["overlap"])
+            self.instructions_canvas.place(x=175, y=150)
+
+            # Instructions
+            self.instructions_canvas.create_text(200, 30, text="Instructions", font=("Comic Sans MS", 16), fill=theme["text"])
+            self.instructions_canvas.create_text(200, 70, text="Single player: arrow keys", font=("Comic Sans MS", 11), fill=theme["text"])
+            self.instructions_canvas.create_text(200, 90, text="Multiplayer: WASD and arrow keys", font=("Comic Sans MS", 11), fill=theme["text"])
+            self.instructions_canvas.create_text(200, 110, text="Collect all items to win!", font=("Comic Sans MS", 11), fill=theme["text"])
+            self.instructions_canvas.create_text(200, 130, text="Space = pause", font=("Comic Sans MS", 11), fill=theme["text"])
+            self.instructions_canvas.create_text(150, 150, text="Esc = exit", font=("Comic Sans MS", 11), fill=theme["text"])
+            self.instructions_canvas.create_text(250, 150, text="r = restart", font=("Comic Sans MS", 11), fill=theme["text"])
+            self.instructions_canvas.create_text(200, 190, text="Each time you collect a item you get a quote and an explanation about what the SDG of the level is - Goal, Actions, etc.", justify= 'center', width=350, font=("Comic Sans MS", 11), fill=theme["text"])
+
+            back_button = Button(self.instructions_canvas, text="Back", command=lambda: self.show_main_layout(self.instructions_canvas), bg=theme["button"], fg=theme["text"])
+            self.instructions_canvas.create_window(200, 260, window=back_button)
+
+        def purpose_layout(self):
+            theme = self.themes[self.current_theme]
+            self.purpose_canvas = Canvas(self.master, height=300, width=400, bg=theme["overlap"])
+            self.purpose_canvas.place(x=175, y=150)
+
+            # purpose explanation
+            self.purpose_canvas.create_text(200, 100, text="Purpose", font=("Comic Sans MS", 16), fill=theme["text"])
+            self.purpose_canvas.create_text(200, 120, text="The purpose of this game is to teach the multiple SDGs in a fun way.\n ", font=("Comic Sans MS", 14), fill=theme["text"])
+            
+
+            back_button = Button(self.purpose_canvas, text="Back", command=lambda: self.show_main_layout(self.purpose_canvas), bg=theme["button"], fg=theme["text"])
+            self.purpose_canvas.create_window(200, 260, window=back_button)
 
         def level_selection_layout(self):
             theme = self.themes[self.current_theme]
@@ -170,7 +207,7 @@ Be strategic in your movements! Some paths might lead to dead ends, while others
             self.lev_sel_canvas.place(x=175, y=150)
             self.lev_sel_canvas.create_text(200, 30, text="Level selection", font=("Comic Sans MS", 14), fill=theme["text"])
 
-            back_button = Button(self.lev_sel_canvas, text="Back", command=lambda: self.show_main_layout(self.lev_sel_canvas), bg=theme["button"], fg=theme["text"])
+            back_button = Button(self.lev_sel_canvas, text="Confirm", command=lambda: self.show_main_layout(self.lev_sel_canvas), bg=theme["button"], fg=theme["text"])
             self.lev_sel_canvas.create_window(200, 260, window=back_button)
             
             # Update level text to show mode
@@ -250,7 +287,7 @@ Be strategic in your movements! Some paths might lead to dead ends, while others
             self.current_character_index = 0
 
             # Back button
-            back_button = Button(self.customize_canvas, text="Back", command=lambda: self.show_main_layout(self.customize_canvas),bg=theme["button"], fg=theme["text"])
+            back_button = Button(self.customize_canvas, text="Confirm", command=lambda: self.show_main_layout(self.customize_canvas),bg=theme["button"], fg=theme["text"])
             self.customize_canvas.create_window(200, 270, window=back_button)
 
             #create theme preview
@@ -420,7 +457,7 @@ Be strategic in your movements! Some paths might lead to dead ends, while others
             if self.HomePage is None:
                 self.HomePage = SDG_App.Applayout()
 
-        def start(self, master, mode, canvas, current_wall_i, current_char_i, theme, multiplayer=False):
+        def start(self, master, mode, canvas, current_wall_i, current_char_i, theme, multiplayer=False, event=None):
             # Theme setup
             self.current_theme = theme
             self.mode = mode
@@ -436,8 +473,8 @@ Be strategic in your movements! Some paths might lead to dead ends, while others
             # Canvas calculations - adjust for multiplayer
             self.HEIGHT = 600
             if self.multiplayer:
-                self.WIDTH = 1400  # Double width for two mazes
-                self.maze_width = 700  # Width per maze
+                self.WIDTH = 1300  # Double width for two mazes
+                self.maze_width = 650  # Width per maze
             else:
                 self.WIDTH = 700
                 self.maze_width = 700
@@ -481,7 +518,7 @@ Be strategic in your movements! Some paths might lead to dead ends, while others
             else:
                 self.init_singleplayer()
             
-            # Quotes and messages (same as before)
+            # Quotes and messages
             self.quotes = [
                 "'Education is the most powerful weapon which you can use to change the world.'\n - Nelson Mandela",
                 "'The harder I work, the more luck I seem to have.'\n - Thomas Jefferson",
@@ -499,7 +536,7 @@ Be strategic in your movements! Some paths might lead to dead ends, while others
                 "'All our dreams can come true, if we have the courage to pursue them.'\n - Walt Disney "
             ]
             
-            # Item messages (same as before - keeping original for brevity)
+            # Item messages
             self.item_message_list = [
                 ["🌾 Sustainable Development Goal 2 (SDG 2) aims to end hunger, achieve food security, improve nutrition, and promote sustainable agriculture by 2030.", "👶 It focuses especially on vulnerable groups like children, pregnant women, and the poor, ensuring they have access to safe and nutritious food all year round.", "🌍 SDG 2 also targets the elimination of all forms of malnutrition, including stunting, wasting, and obesity, which affect millions globally.", "🚜 A key part of the goal is to boost the productivity and income of small-scale food producers through equal access to land, resources, and markets.", "🌱 By encouraging resilient agricultural practices and protecting genetic diversity in crops and livestock, SDG 2 supports long-term sustainability in food systems."],
                 ["🌐 SDG 2 is one of the 17 goals established by the United Nations in 2015 to create a better and more sustainable future for all.", "📉 Despite decades of progress, hunger has been rising again since 2015 due to conflict, climate change, and economic instability.","👩‍🌾 The goal emphasizes empowering women, indigenous peoples, and small-scale farmers to improve agricultural productivity and income.","🌾 SDG 2 includes eight specific targets and 14 indicators to measure progress toward ending hunger and promoting sustainable agriculture.","🧬 One target focuses on preserving genetic diversity in seeds, plants, and animals to ensure resilient food systems."],
@@ -527,6 +564,9 @@ Be strategic in your movements! Some paths might lead to dead ends, while others
             
             # Bind keys and initialize game
             self.master.bind("<KeyPress>", self.move_player)
+            self.master.bind("<space>", self.Menu)
+            self.master.bind("<r>", lambda: self.start(self.master, self.mode, self.canvas, self.selected_wall, self.selected_character, self.current_theme, self.multiplayer))
+            self.master.bind("<Escape>", lambda: self.HomePage.layout(self.master, self.current_theme, self.mode, self.selected_wall, self.selected_character))
             self.draw_maze()
             self.update_timer()
             self.animate_character()
@@ -585,10 +625,16 @@ Be strategic in your movements! Some paths might lead to dead ends, while others
                     text="0", font=('Comic Sans MS', 16), fill=self.themes["text"]
                 )
                 
-                # Instructions
-                self.info_text = self.maze_canvas.create_text(
-                    int(self.WIDTH / 2), int(self.HEIGHT * 0.94), width=600, 
-                    text="Player 1: WASD keys | Player 2: Arrow keys | Collect all items to win!", 
+                # Player 1 instructions
+                self.info_text1 = self.maze_canvas.create_text(
+                    int(self.WIDTH * 0.25), int(self.HEIGHT * 0.94), width=600, 
+                    text="Player 1: WASD keys | Collect all items to win!", 
+                    font=('Comic Sans MS', 10), fill=self.themes["text"]
+                )
+                # Player 2 instructions
+                self.info_text2 = self.maze_canvas.create_text(
+                    int(self.WIDTH * 0.75), int(self.HEIGHT * 0.94), width=600, 
+                    text="Player 2: Arrow keys | Collect all items to win!", 
                     font=('Comic Sans MS', 10), fill=self.themes["text"]
                 )
             else:
@@ -696,10 +742,6 @@ Be strategic in your movements! Some paths might lead to dead ends, while others
                         self.maze_canvas.create_rectangle(x1, y1, x2, y2, fill="green")
                     elif self.maze[row][col] == "*":
                         self.add_multiplayer_item(row, col, 2)
-
-            # Draw dividing line
-            self.maze_canvas.create_line(self.maze_width, 0, self.maze_width, self.HEIGHT, 
-                                    fill=self.themes["text"], width=3)
 
         def add_item(self, row, col, x1, y1, x2, y2):
             """Add item for single player mode"""
@@ -843,9 +885,17 @@ Be strategic in your movements! Some paths might lead to dead ends, while others
                 # Check if player reached the end
                 if self.maze[new_row][new_col] == "E":
                     if player == 1:
-                        self.player1_finished = True
+                        if self.player1_score == self.total_items:  
+                            self.player1_finished = True
+                        else:
+                            self.maze_canvas.itemconfig(self.info_text1, 
+                                            text="You have not collected all items!")
                     else:
-                        self.player2_finished = True
+                        if self.player2_score == self.total_items:
+                            self.player2_finished = True
+                        else:
+                            self.maze_canvas.itemconfig(self.info_text2, 
+                                            text="You have not collected all items!")
                     
                     self.check_multiplayer_end()
 
@@ -866,12 +916,14 @@ Be strategic in your movements! Some paths might lead to dead ends, while others
                     if player == 1:
                         self.player1_score += 1
                         self.maze_canvas.itemconfig(score_text, text=f"Player 1: {self.player1_score}")
+                        self.maze_canvas.itemconfig(self.info_text1, 
+                                            text=self.quotes[randint(0, len(self.quotes) - 1)])
                     else:
                         self.player2_score += 1
                         self.maze_canvas.itemconfig(score_text, text=f"Player 2: {self.player2_score}")
-                    
-                    self.maze_canvas.itemconfig(self.info_text, 
+                        self.maze_canvas.itemconfig(self.info_text2, 
                                             text=self.quotes[randint(0, len(self.quotes) - 1)])
+                    
                     return True
             return False
 
@@ -1011,7 +1063,7 @@ Be strategic in your movements! Some paths might lead to dead ends, while others
             if not self.finished and not self.stop:
                 self.master.after(500, self.animate_item)
 
-        def Menu(self):
+        def Menu(self, event=None):
             if hasattr(self, 'menu_canvas') and self.menu_canvas:
                 self.close_menu()
                 return
@@ -1027,9 +1079,9 @@ Be strategic in your movements! Some paths might lead to dead ends, while others
             
             homepage = Button(self.master, text="Home", 
                             command=lambda: [self.close_menu(), 
-                                            self.HomePage.layout(self.master, self.current_theme, 
-                                                            self.mode, self.selected_wall, 
-                                                            self.selected_character)], 
+                            self.HomePage.layout(self.master, self.current_theme, 
+                            self.mode, self.selected_wall, 
+                            self.selected_character)], 
                             bg=self.themes["bg"], fg=self.themes["fg"])
             resume_button = Button(self.master, image=self.playbutton, command=self.close_menu, 
                                 bg=self.themes["bg"], fg=self.themes["fg"])
@@ -1101,8 +1153,8 @@ Be strategic in your movements! Some paths might lead to dead ends, while others
                 ImageTk.PhotoImage(self.wall_3.resize((self.cell_size_x, self.cell_size_y)), Image.Resampling.LANCZOS),
                 ImageTk.PhotoImage(self.wall_4.resize((self.cell_size_x, self.cell_size_y)), Image.Resampling.LANCZOS)
             ]
-            self.char1_frames = self.load_gif_frames(r"Images\Character #2.gif")
-            self.char2_frames = self.load_gif_frames(r"Images\llama.gif")
+            self.char1_frames = self.load_gif_frames(r"Images\Character #1.gif")
+            self.char2_frames = self.load_gif_frames(r"Images\Character #2.gif")
             self.character_images = [self.char1_frames, self.char2_frames]
 
             # Item images
@@ -1248,17 +1300,11 @@ Be strategic in your movements! Some paths might lead to dead ends, while others
 
         def show_single_timeout(self):
             """Show timeout for single player"""
-            game_over_win = Toplevel(self.master)
-            game_over_win.title("Game Over")
+            game_over_win = Canvas(self.master, width= 300, height=300, bg=self.themes["overlap"])
+            game_over_win.place(x=self.WIDTH / 2, y=self.HEIGHT / 2, anchor="center")
+            game_over_win.create_text(150, 30, text="Game Over", font= ('Comic Sans MS', 16), fill=self.themes['text'])
             
-            message = Label(
-                game_over_win,
-                text=f"Time's up!\nItems collected: {self.score}/{self.total_items}",
-                font=('Arial', 16),
-                pady=20,
-                padx=20
-            )
-            message.pack()
+            game_over_win.create_text(150, 150, anchor='center', text=f"Time's up!\nItems collected: {self.score}/{self.total_items}", font=('Comic Sans MS', 12), fill=self.themes['text'])
 
             restart_button = Button(
                 game_over_win,
@@ -1268,7 +1314,7 @@ Be strategic in your movements! Some paths might lead to dead ends, while others
                                         self.selected_wall, self.selected_character, 
                                         self.current_theme, False)]
             )
-            restart_button.pack(pady=10)
+            game_over_win.create_window(150, 200, window=restart_button)
 
         def show_multiplayer_timeout(self):
             """Show timeout for multiplayer"""
