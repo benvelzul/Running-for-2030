@@ -128,13 +128,13 @@ class SDG_App:
             self.character_images = [self.char1_frames, self.char2_frames]
 
             # other images
-            self.settings_img = (PhotoImage(file= r"Images\settings.png")).subsample(6)
+            self.settings_img = (PhotoImage(file= r"Images\settings.png"))
            
             # setting layout images
-            self.music_img = (PhotoImage(file= r"Images\music_Symbol.png")).subsample(9)
-            self.no_music_img = (PhotoImage(file=r"Images\nomusic_Symbol.png")).subsample(4)
-            self.volume_on_img = (PhotoImage(file=r"Images\volume_on.png")).subsample(4)
-            self.volume_off_img = (PhotoImage(file=r"Images\volume_off.png")).subsample(4)
+            self.music_img = (PhotoImage(file= r"Images\music_Symbol.png"))
+            self.no_music_img = (PhotoImage(file=r"Images\nomusic_Symbol.png"))
+            self.volume_on_img = (PhotoImage(file=r"Images\volume_on.png"))
+            self.volume_off_img = (PhotoImage(file=r"Images\volume_off.png"))
 
         def load_gif_frames(self, path):
             gif = Image.open(path)
@@ -237,7 +237,7 @@ class SDG_App:
             credits_text.pack(fill=tk.BOTH, expand=True)
             
             # Insert the credits content
-            credits_content = "Benjamin Velez Zuluaga - Coder and team member \nZander Setiawan - Video, visual and audio designer and team member \nAlexander Sabariz - Tester \nTatiana Zuluaga Garcia - Tester \nSebastien Nagy - Tester \nTracey Iki - Teacher \nJose Fuentes - Teacher \nPaul Benni - Mentor and tester \n\nSites and platforms: Piskel (https://piskelapp.com/) - Animation Xmind (https://xmind.net/) - Mindmaping GitHub (https://github.com/) - Version control Vs code (https://code.visualstudio.com/) - Code editor Cursor (https://cursor.com/) - Code editor Windsurf (https://windsurfrs.com/) - Code editor CEDR (https://cedr.com/) - School"
+            credits_content = "Benjamin Velez Zuluaga - Coder and team member \nZander Setiawan - Video, visual and audio designer and team member \nAlexander Sabariz - Tester \nTatiana Zuluaga Garcia - Tester \nSebastien Nagy - Tester \nXavior Green - Tester \nJake Blomfield - Tester \nHayden Fowler - Tester \nTracey Iki - Teacher \nJose Fuentes - Teacher \nPaul Benni - Mentor and tester \n\nSites and platforms: \nPiskel (https://piskelapp.com/) - Animation \nXmind (https://xmind.net/) - Mindmaping \nGitHub (https://github.com/) - Version control \nVs code (https://code.visualstudio.com/) - Code editor \nCursor (https://cursor.com/) - Code editor \nWindsurf (https://windsurfrs.com/) - Code editor \nCEDR (https://cedr.com/) - School"
             
             credits_text.insert(tk.END, credits_content)
             credits_text.config(state=tk.DISABLED)  # Make it read-only
@@ -616,11 +616,10 @@ class SDG_App:
                 ["Solar panel installations are expanding in both urban and rural areas to harness clean energy from the sun.","Wind farms are being developed onshore and offshore to generate electricity with minimal environmental impact.","Battery storage systems are improving energy reliability by storing excess renewable power for later use.","Smart grids are being deployed to optimize energy distribution and integrate renewables efficiently.","Hydropower plants are being modernized to increase efficiency and reduce ecological disruption.","Geothermal energy is being tapped in volcanic regions to provide consistent, low-emission power.","Bioenergy projects are converting agricultural and organic waste into usable fuel and electricity.","Electric vehicle charging networks are expanding to support the transition to clean transportation."],
                 ["Governments are offering subsidies and tax incentives to promote investment in renewable energy.","International climate agreements are encouraging countries to set clean energy targets and share technologies.","Carbon pricing mechanisms are being introduced to make fossil fuels less economically attractive.","Green bonds are financing large-scale renewable energy infrastructure projects around the world.","Public-private partnerships are accelerating the deployment of clean energy in developing regions.","Energy access programs are targeting off-grid communities with affordable solar and wind solutions.","Regulatory reforms are streamlining permits and approvals for renewable energy installations.","Development banks are supporting clean energy transitions through low-interest loans and grants."],
                 ["Schools are incorporating renewable energy topics into science and environmental curricula.","Local cooperatives are managing community-owned solar and wind projects to generate shared benefits.","Training programs are equipping workers with skills for jobs in the renewable energy sector.","Awareness campaigns are educating the public about the benefits of switching to clean energy.","Youth organizations are leading advocacy efforts for sustainable energy policies and practices.","Rural electrification initiatives are improving livelihoods by powering homes, clinics, and businesses.","Workshops and webinars are helping entrepreneurs develop renewable energy startups.","Cultural leaders are promoting sustainable energy practices through storytelling and local traditions."],
-                ["Marine protected areas are being expanded to safeguard biodiversity and restore fish populations.","Coral reef restoration projects are using techniques like coral gardening and artificial reefs.","Mangrove forests are being replanted to protect coastlines and support aquatic ecosystems.","Reforestation campaigns are restoring degraded land and improving carbon sequestration.","Wetland conservation efforts are preserving habitats for birds, amphibians, and aquatic life.","Sustainable forestry practices are reducing deforestation and promoting ecosystem health.","Invasive species are being removed to protect native flora and fauna in both land and marine environments.","Grassland restoration is improving soil health and supporting pollinators and grazing species.","Plastic clean-up initiatives are reducing ocean pollution and protecting marine animals."],
-                ["Fishing quotas and bans on destructive practices are helping rebuild marine populations.","Environmental laws are being strengthened to protect endangered species and critical habitats.","Satellite monitoring is tracking deforestation, illegal fishing, and ecosystem changes in real time.","Eco-certification programs are promoting sustainable seafood and timber products.","Climate adaptation strategies are integrating biodiversity protection into national planning.","Funding for nature-based solutions is supporting projects that benefit both people and ecosystems.","Technology is being used to map biodiversity hotspots and guide conservation priorities.","Pollution control regulations are reducing runoff and waste that harm land and sea life.","International treaties are fostering cooperation on ocean governance and forest preservation."],
-                ["Local communities are leading conservation efforts through traditional ecological knowledge.","Schools are teaching students about marine and terrestrial ecosystems and their importance.","Citizen science programs are engaging volunteers in monitoring wildlife and environmental health.","Eco-tourism is providing income while promoting awareness and protection of natural areas.","Youth groups are organizing beach clean-ups and tree planting events to support biodiversity.","Public campaigns are raising awareness about the impact of plastic and deforestation.","Indigenous leaders are advocating for land and water rights to protect sacred ecosystems.","Art and storytelling are being used to inspire action for ocean and forest conservation.","Community gardens and green spaces are reconnecting people with nature and promoting stewardship."]
+                ["Marine protected areas are being expanded to safeguard biodiversity and restore fish populations.","Coral reef restoration projects are using techniques like coral gardening and artificial reefs.","Mangrove forests are being replanted to protect coastlines and support aquatic ecosystems.","Reforestation campaigns are restoring degraded land and improving carbon sequestration.","Wetland conservation efforts are preserving habitats for birds, amphibians, and aquatic life.","Sustainable forestry practices are reducing deforestation and promoting ecosystem health.","Invasive species are being removed to protect native flora and fauna in both land and marine environments.","Grassland restoration is improving soil health and supporting pollinators and grazing species.","Plastic clean-up initiatives are reducing ocean pollution and protecting marine animals.","SDG 14 and 15, Together, they emphasize the urgent need to protect Earth’s natural habitats above and below the surface."],
+                ["Fishing quotas and bans on destructive practices are helping rebuild marine populations.","Environmental laws are being strengthened to protect endangered species and critical habitats.","Satellite monitoring is tracking deforestation, illegal fishing, and ecosystem changes in real time.","Eco-certification programs are promoting sustainable seafood and timber products.","Climate adaptation strategies are integrating biodiversity protection into national planning.","Funding for nature-based solutions is supporting projects that benefit both people and ecosystems.","Technology is being used to map biodiversity hotspots and guide conservation priorities.","Pollution control regulations are reducing runoff and waste that harm land and sea life.","International treaties are fostering cooperation on ocean governance and forest preservation.", "SDG 15 focuses on restoring forests, halting biodiversity loss, and promoting sustainable land use to preserve life on land. "],
+                ["Local communities are leading conservation efforts through traditional ecological knowledge.","SDG 14 aims to conserve and sustainably use the oceans, seas, and marine resources to protect aquatic life and coastal ecosystems.","Schools are teaching students about marine and terrestrial ecosystems and their importance.","Citizen science programs are engaging volunteers in monitoring wildlife and environmental health.","Eco-tourism is providing income while promoting awareness and protection of natural areas.","Youth groups are organizing beach clean-ups and tree planting events to support biodiversity.","Public campaigns are raising awareness about the impact of plastic and deforestation.","Indigenous leaders are advocating for land and water rights to protect sacred ecosystems.","Art and storytelling are being used to inspire action for ocean and forest conservation.","Community gardens and green spaces are reconnecting people with nature and promoting stewardship."]
             ]
-
             # UI setup
             self.setup_ui()
             
@@ -1344,9 +1343,9 @@ class SDG_App:
             back_button = Button(
                 fin_window, text="Back to Menu",
                 command=lambda: [fin_window.destroy(), 
-                            self.start(self.master, self.mode, self.maze_canvas, 
+                            self.Homepage.layout(self.master, self.mode, self.maze_canvas, 
                                         self.selected_wall, self.selected_character, 
-                                        self.current_theme, False)]
+                                        self.current_theme, self.multiplayer)]
             )
             nextLevelButton.pack(pady=13)
             back_button.pack(pady=13)
@@ -1416,5 +1415,5 @@ def main():
 if __name__ == "__main__":
     try:
         main()
-    except:
-        print("Sorry I am a really bad coder")
+    except Exception:
+        print("Sorry, I am a bad coder")
