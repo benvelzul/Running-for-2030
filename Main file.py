@@ -1,10 +1,12 @@
 from tkinter import *
 from Levels import all_levels as LEVELS
 import tkinter as tk
+from tkinter import scrolledtext
 from PIL import Image, ImageTk
 import pandas as pd
 import time
 from random import randint
+import pygame
 
 class SDG_App:
     class Applayout:
@@ -44,6 +46,12 @@ class SDG_App:
             
             # Remove the recursive initialization
             self.Mazegame = None
+            pygame.mixer.init()
+            pygame.mixer.music.load("Music\Backtrack.mp3")
+            self.button_sound = pygame.mixer.Sound("Music\Button sound.mp3")
+            pygame.mixer.music.play(-1)
+            pygame.mixer.music.set_volume(0.7)
+            pygame.mixer.music.unpause()
             self.init_mazegame()
 
         def init_mazegame(self):
@@ -81,7 +89,7 @@ class SDG_App:
                 text="Play", 
                 height=3, 
                 width=11, 
-                command=lambda: self.Mazegame.start(
+                command=lambda: [self.play_sound(), self.Mazegame.start(
                     self.master, 
                     self.mode, 
                     self.layout_canvas, 
@@ -89,14 +97,14 @@ class SDG_App:
                     self.current_character_index, 
                     self.current_theme, 
                     self.is_multiplayer  # Pass the multiplayer flag
-                ), 
+                )], 
                 font=("Comic Sans MS", 12), 
                 bg=theme["button"], 
                 fg=theme["text"]
             )
-            settings_button = Button(master, image=self.settings_img, command=self.setting_layout, bg=theme["button"])
-            customize_button = Button(master, text="Customize", height=2, width=9, command=self.customize_layout, font=("Comic Sans MS", 11), bg=theme["button"], fg=theme["text"])
-            level_button = Button(master, text="Level \nselection", height=2, width=9, command=self.level_selection_layout, font=("Comic Sans MS", 11), bg=theme["button"], fg=theme["text"])
+            settings_button = Button(master, image=self.settings_img, command=lambda: [self.play_sound(), self.setting_layout()], bg=theme["button"])
+            customize_button = Button(master, text="Customize", height=2, width=9, command=lambda: [self.play_sound(), self.customize_layout()], font=("Comic Sans MS", 11), bg=theme["button"], fg=theme["text"])
+            level_button = Button(master, text="Level \nselection", height=2, width=9, command=lambda: [self.play_sound(), self.level_selection_layout()], font=("Comic Sans MS", 11), bg=theme["button"], fg=theme["text"])
 
             # putting the buttons in Canvas
             self.layout_canvas.create_window(350, 300, window=play_button)
@@ -141,17 +149,18 @@ class SDG_App:
             return frames
 
         def setting_layout(self):  # when settings button pressed
+            self.play_sound()
             theme = self.themes[self.current_theme]
             self.settings_canvas = Canvas(self.master, height=300, width=400, bg=theme["overlap"])
             self.settings_canvas.place(x=175, y=150)
             self.settings_canvas.create_text(200, 50, text="Settings", font=("Helvetica", 14), fill=theme["text"])
     
             # Update buttons with theme
-            back_button = Button(self.settings_canvas, text="Confirm", command=lambda: self.show_main_layout(self.settings_canvas),bg=theme["button"], fg=theme["text"])
-            credits_button = Button(self.settings_canvas, text="Credits", command=None, bg=theme["button"], fg=theme["text"])
-            instructions_button = Button(self.settings_canvas, text="Instructions", command=self.instructions_layout, bg=theme["button"], fg=theme["text"])
-            purpose_button = Button(self.settings_canvas, text="Purpose", command=None, bg=theme["button"], fg=theme["text"])
-            about_button = Button(self.settings_canvas, text="About", command=None, bg=theme["button"], fg=theme["text"])
+            back_button = Button(self.settings_canvas, text="Back", command=lambda: [self.play_sound(), self.show_main_layout(self.settings_canvas)],bg=theme["button"], fg=theme["text"])
+            credits_button = Button(self.settings_canvas, text="Credits", command=lambda: [self.play_sound(), self.credits_layout()], bg=theme["button"], fg=theme["text"])
+            instructions_button = Button(self.settings_canvas, text="Instructions", command=lambda: [self.play_sound(), self.instructions_layout()], bg=theme["button"], fg=theme["text"])
+            purpose_button = Button(self.settings_canvas, text="Purpose", command=lambda: [self.play_sound(), self.purpose_layout()], bg=theme["button"], fg=theme["text"])
+            about_button = Button(self.settings_canvas, text="About", command=lambda: [self.play_sound(), self.about_layout()], bg=theme["button"], fg=theme["text"])
 
             #lists for animation and buttons
             self.music_list = [self.music_img, self.no_music_img]
@@ -185,7 +194,7 @@ class SDG_App:
             self.instructions_canvas.create_text(250, 150, text="r = restart", font=("Comic Sans MS", 11), fill=theme["text"])
             self.instructions_canvas.create_text(200, 190, text="Each time you collect a item you get a quote and an explanation about what the SDG of the level is - Goal, Actions, etc.", justify= 'center', width=350, font=("Comic Sans MS", 11), fill=theme["text"])
 
-            back_button = Button(self.instructions_canvas, text="Back", command=lambda: self.show_main_layout(self.instructions_canvas), bg=theme["button"], fg=theme["text"])
+            back_button = Button(self.instructions_canvas, text="Back", command=lambda: [self.play_sound(), self.show_main_layout(self.instructions_canvas, True)], bg=theme["button"], fg=theme["text"])
             self.instructions_canvas.create_window(200, 260, window=back_button)
 
         def purpose_layout(self):
@@ -194,20 +203,65 @@ class SDG_App:
             self.purpose_canvas.place(x=175, y=150)
 
             # purpose explanation
-            self.purpose_canvas.create_text(200, 100, text="Purpose", font=("Comic Sans MS", 16), fill=theme["text"])
-            self.purpose_canvas.create_text(200, 120, text="The purpose of this game is to teach the multiple SDGs in a fun way.\n ", font=("Comic Sans MS", 14), fill=theme["text"])
+            self.purpose_canvas.create_text(200, 30, text="Purpose", font=("Comic Sans MS", 16), fill=theme["text"])
+            self.purpose_canvas.create_text(200, 50, 
+                anchor="n", justify="center", width=350, 
+                text="The purpose of this game is to teach the multiple Sustainable Development Goals (SDGs) in a fun way. Our game aims to make learning and understanding these goals more accessible and engaging for all ages. Our game is designed to be educational, fun, and interactive, allowing players to learn about the SDGs through a gameplay experience. By playing our game, players can develop a deeper understanding of the goals and the importance of sustainable development. Our game will be updated regularly to include new SDGs and concepts, providing a continuously evolving and entertaining learning experience for players. ", 
+                font=("Comic Sans MS", 9), fill=theme["text"]
+            )
             
 
-            back_button = Button(self.purpose_canvas, text="Back", command=lambda: self.show_main_layout(self.purpose_canvas), bg=theme["button"], fg=theme["text"])
+            back_button = Button(self.purpose_canvas, text="Back", command=lambda: [self.play_sound(), self.show_main_layout(self.purpose_canvas, True)], bg=theme["button"], fg=theme["text"])
             self.purpose_canvas.create_window(200, 260, window=back_button)
 
+        def credits_layout(self):
+            theme = self.themes[self.current_theme]
+            self.credits_canvas = Canvas(self.master, height=300, width=400, bg=theme["overlap"])
+            self.credits_canvas.place(x=175, y=150)
+            self.credits_canvas.create_text(200, 30, text="Credits", font=("Comic Sans MS", 14), fill=theme["text"])
+            
+            # Create a frame for the scrollable text
+            credits_frame = Frame(self.credits_canvas, bg=theme["overlap"])
+            self.credits_canvas.create_window(200, 150, window=credits_frame, width=350, height=180)
+            
+            credits_text = scrolledtext.ScrolledText(
+                credits_frame,
+                width=40,
+                height=10,
+                wrap=tk.WORD,
+                font=("Comic Sans MS", 9),
+                bg=theme["canvas"],
+                fg=theme["text"],
+                insertbackground=theme["text"]
+            )
+            credits_text.pack(fill=tk.BOTH, expand=True)
+            
+            # Insert the credits content
+            credits_content = "Benjamin Velez Zuluaga - Coder and team member \nZander Setiawan - Video, visual and audio designer and team member \nAlexander Sabariz - Tester \nTatiana Zuluaga Garcia - Tester \nSebastien Nagy - Tester \nTracey Iki - Teacher \nJose Fuentes - Teacher \nPaul Benni - Mentor and tester \n\nSites and platforms: Piskel (https://piskelapp.com/) - Animation Xmind (https://xmind.net/) - Mindmaping GitHub (https://github.com/) - Version control Vs code (https://code.visualstudio.com/) - Code editor Cursor (https://cursor.com/) - Code editor Windsurf (https://windsurfrs.com/) - Code editor CEDR (https://cedr.com/) - School"
+            
+            credits_text.insert(tk.END, credits_content)
+            credits_text.config(state=tk.DISABLED)  # Make it read-only
+            
+            back_button = Button(self.credits_canvas, text="Back", command=lambda: [self.play_sound(), self.show_main_layout(self.credits_canvas, True)], bg=theme["button"], fg=theme["text"])
+            self.credits_canvas.create_window(200, 260, window=back_button)
+        
+        def about_us_layout(self):
+            theme = self.themes[self.current_theme]
+            self.about_us_canvas = Canvas(self.master, height=300, width=400, bg=theme["overlap"])
+            self.about_us_canvas.place(x=175, y=150)
+            self.about_us_canvas.create_text(200, 30, text="About us", font=("Comic Sans MS", 14), fill=theme["text"])
+            self.about_us_canvas.create_text(200, 50, text="", font=("Comic Sans MS", 11), fill=theme["text"])
+            
+            back_button = Button(self.about_us_canvas, text="Back", command=lambda: [self.play_sound(), self.show_main_layout(self.about_us_canvas, True)], bg=theme["button"], fg=theme["text"])
+            self.about_us_canvas.create_window(200, 260, window=back_button)
+        
         def level_selection_layout(self):
             theme = self.themes[self.current_theme]
             self.lev_sel_canvas = Canvas(self.master, height=300, width=400, bg=theme["overlap"])
             self.lev_sel_canvas.place(x=175, y=150)
             self.lev_sel_canvas.create_text(200, 30, text="Level selection", font=("Comic Sans MS", 14), fill=theme["text"])
 
-            back_button = Button(self.lev_sel_canvas, text="Confirm", command=lambda: self.show_main_layout(self.lev_sel_canvas), bg=theme["button"], fg=theme["text"])
+            back_button = Button(self.lev_sel_canvas, text="Confirm", command=lambda: [self.play_sound(), self.show_main_layout(self.lev_sel_canvas)], bg=theme["button"], fg=theme["text"])
             self.lev_sel_canvas.create_window(200, 260, window=back_button)
             
             # Update level text to show mode
@@ -215,24 +269,24 @@ class SDG_App:
             self.level_text = self.lev_sel_canvas.create_text(200, 55, text=mode_text, font=("Comic Sans MS", 14), fill=theme["text"])
 
             # creating button levels
-            lev1 = Button(self.lev_sel_canvas, text="Level 1", command= lambda: self.lev_update(0),bg=theme["button"], fg=theme["text"])
-            lev2 = Button(self.lev_sel_canvas, text="Level 2", command= lambda: self.lev_update(1),bg=theme["button"], fg=theme["text"])
-            lev3 = Button(self.lev_sel_canvas, text="Level 3", command= lambda: self.lev_update(2),bg=theme["button"], fg=theme["text"])
-            lev4 = Button(self.lev_sel_canvas, text="Level 4", command= lambda: self.lev_update(3),bg=theme["button"], fg=theme["text"])
-            lev5 = Button(self.lev_sel_canvas, text="Level 5", command= lambda: self.lev_update(4),bg=theme["button"], fg=theme["text"])
-            lev6 = Button(self.lev_sel_canvas, text="Level 6", command= lambda: self.lev_update(5),bg=theme["button"], fg=theme["text"])
-            lev7 = Button(self.lev_sel_canvas, text="Level 7", command= lambda: self.lev_update(6),bg=theme["button"], fg=theme["text"])
-            lev8 = Button(self.lev_sel_canvas, text="Level 8", command= lambda: self.lev_update(7),bg=theme["button"], fg=theme["text"])
-            lev9 = Button(self.lev_sel_canvas, text="Level 9", command= lambda: self.lev_update(8),bg=theme["button"], fg=theme["text"])
-            lev10 = Button(self.lev_sel_canvas, text="Level 10", command= lambda: self.lev_update(9),bg=theme["button"], fg=theme["text"])
-            lev11 = Button(self.lev_sel_canvas, text="Level 11", command= lambda: self.lev_update(10),bg=theme["button"], fg=theme["text"])
-            lev12 = Button(self.lev_sel_canvas, text="Level 12", command= lambda: self.lev_update(11),bg=theme["button"], fg=theme["text"])
-            lev13 = Button(self.lev_sel_canvas, text="Level 13", command= lambda: self.lev_update(12),bg=theme["button"], fg=theme["text"])
-            lev14 = Button(self.lev_sel_canvas, text="Level 14", command= lambda: self.lev_update(13),bg=theme["button"], fg=theme["text"])
-            lev15 = Button(self.lev_sel_canvas, text="Level 15", command= lambda: self.lev_update(14),bg=theme["button"], fg=theme["text"])
+            lev1 = Button(self.lev_sel_canvas, text="Level 1", command= lambda: [self.play_sound(), self.lev_update(0)],bg=theme["button"], fg=theme["text"])
+            lev2 = Button(self.lev_sel_canvas, text="Level 2", command= lambda: [self.play_sound(), self.lev_update(1)],bg=theme["button"], fg=theme["text"])
+            lev3 = Button(self.lev_sel_canvas, text="Level 3", command= lambda: [self.play_sound(), self.lev_update(2)],bg=theme["button"], fg=theme["text"])
+            lev4 = Button(self.lev_sel_canvas, text="Level 4", command= lambda: [self.play_sound(), self.lev_update(3)],bg=theme["button"], fg=theme["text"])
+            lev5 = Button(self.lev_sel_canvas, text="Level 5", command= lambda: [self.play_sound(), self.lev_update(4)],bg=theme["button"], fg=theme["text"])
+            lev6 = Button(self.lev_sel_canvas, text="Level 6", command= lambda: [self.play_sound(), self.lev_update(5)],bg=theme["button"], fg=theme["text"])
+            lev7 = Button(self.lev_sel_canvas, text="Level 7", command= lambda: [self.play_sound(), self.lev_update(6)],bg=theme["button"], fg=theme["text"])
+            lev8 = Button(self.lev_sel_canvas, text="Level 8", command= lambda: [self.play_sound(), self.lev_update(7)],bg=theme["button"], fg=theme["text"])
+            lev9 = Button(self.lev_sel_canvas, text="Level 9", command= lambda: [self.play_sound(), self.lev_update(8)],bg=theme["button"], fg=theme["text"])
+            lev10 = Button(self.lev_sel_canvas, text="Level 10", command= lambda: [self.play_sound(), self.lev_update(9)],bg=theme["button"], fg=theme["text"])
+            lev11 = Button(self.lev_sel_canvas, text="Level 11", command= lambda: [self.play_sound(), self.lev_update(10)],bg=theme["button"], fg=theme["text"])
+            lev12 = Button(self.lev_sel_canvas, text="Level 12", command= lambda: [self.play_sound(), self.lev_update(11)],bg=theme["button"], fg=theme["text"])
+            lev13 = Button(self.lev_sel_canvas, text="Level 13", command= lambda: [self.play_sound(), self.lev_update(12)],bg=theme["button"], fg=theme["text"])
+            lev14 = Button(self.lev_sel_canvas, text="Level 14", command= lambda: [self.play_sound(), self.lev_update(13)],bg=theme["button"], fg=theme["text"])
+            lev15 = Button(self.lev_sel_canvas, text="Level 15", command= lambda: [self.play_sound(), self.lev_update(14)],bg=theme["button"], fg=theme["text"])
             #random_lev = Button(self.lev_sel_canvas, text="Random generation level",bg=theme["button"], fg=theme["text"])
             multiplayer_text = "Switch to Single Player" if self.is_multiplayer else "Switch to Multiplayer"
-            multiplayer_btn = Button(self.lev_sel_canvas, text=multiplayer_text, command=self.toggle_multiplayer_mode, bg=theme["button"], fg=theme["text"])
+            multiplayer_btn = Button(self.lev_sel_canvas, text=multiplayer_text, command=lambda: [self.play_sound(), self.toggle_multiplayer_mode()], bg=theme["button"], fg=theme["text"])
             self.lev_sel_canvas.create_window(200, 220, window=multiplayer_btn)
 
             # uploading them into the screen
@@ -287,20 +341,20 @@ class SDG_App:
             self.current_character_index = 0
 
             # Back button
-            back_button = Button(self.customize_canvas, text="Confirm", command=lambda: self.show_main_layout(self.customize_canvas),bg=theme["button"], fg=theme["text"])
+            back_button = Button(self.customize_canvas, text="Confirm", command=lambda: [self.play_sound(), self.show_main_layout(self.customize_canvas)],bg=theme["button"], fg=theme["text"])
             self.customize_canvas.create_window(200, 270, window=back_button)
 
             #create theme preview
             self.customize_canvas.create_text(200, 170, text="Theme", font=("Comic Sans MS", 14), fill=theme["text"])
-            theme_button = Button(self.customize_canvas, text="Toggle Theme", command=self.toggle_theme,bg=theme["button"], fg=theme["text"])
+            theme_button = Button(self.customize_canvas, text="Toggle Theme", command=lambda: [self.play_sound(), self.toggle_theme()],bg=theme["button"], fg=theme["text"])
             self.customize_canvas.create_window(200, 200, window=theme_button)
 
             # creat character preview
             self.customize_canvas.create_text(100, 70, text="Character", font=("Comic Sans MS", 14), fill=theme["text"])
             self.character_label = Label(self.customize_canvas,image=self.character_images[self.current_character_index][self.ind])
             self.character_window = self.customize_canvas.create_window(100, 120, window=self.character_label)
-            prev_char = Button(self.customize_canvas, text="<", command=lambda: self.change_character(-1),bg=theme["button"], fg=theme["text"])
-            next_char = Button(self.customize_canvas, text=">", command=lambda: self.change_character(1),bg=theme["button"], fg=theme["text"])
+            prev_char = Button(self.customize_canvas, text="<", command=lambda: [self.play_sound(), self.change_character(-1)],bg=theme["button"], fg=theme["text"])
+            next_char = Button(self.customize_canvas, text=">", command=lambda: [self.play_sound(), self.change_character(1)],bg=theme["button"], fg=theme["text"])
             self.customize_canvas.create_window(50, 140, window=prev_char)
             self.customize_canvas.create_window(150, 140, window=next_char)
 
@@ -308,8 +362,8 @@ class SDG_App:
             self.customize_canvas.create_text(300, 70, text="Wall Style", font=("Comic Sans MS", 14), fill=theme["text"])
             self.wall_label = Label(self.customize_canvas, image=self.wall_images[self.current_wall_index])
             self.customize_canvas.create_window(300, 120, window=self.wall_label)
-            prev_wall = Button(self.customize_canvas, text="<", command=lambda: self.change_wall(-1),bg=theme["button"], fg=theme["text"])
-            next_wall = Button(self.customize_canvas, text=">", command=lambda: self.change_wall(1),bg=theme["button"], fg=theme["text"])
+            prev_wall = Button(self.customize_canvas, text="<", command=lambda: [self.play_sound(), self.change_wall(-1)],bg=theme["button"], fg=theme["text"])
+            next_wall = Button(self.customize_canvas, text=">", command=lambda: [self.play_sound(), self.change_wall(1)],bg=theme["button"], fg=theme["text"])
             self.customize_canvas.create_window(250, 140, window=prev_wall)
             self.customize_canvas.create_window(350, 140, window=next_wall)
 
@@ -371,7 +425,7 @@ class SDG_App:
                 if isinstance(widget, Button):
                     try:
                         widget.configure(bg=theme["button"], fg=theme["text"])
-                    except TclError:
+                    except tk.TclError:
                         continue  # Skip if button was destroyed
 
             # Store theme preference
@@ -414,13 +468,17 @@ class SDG_App:
             if self.cur_volume == False:
                 self.cur_volume = True
                 self.volume_button.config(image=self.volume_list[int(self.cur_volume)])
+                pygame.mixer.music.set_volume(0)
+                pygame.mixer.music.pause()
                 return self.cur_volume
             else:
                 self.cur_volume = False
                 self.volume_button.config(image=self.volume_list[int(self.cur_volume)])
+                pygame.mixer.music.set_volume(0.7)
+                pygame.mixer.music.unpause()
                 return self.cur_volume
 
-        def show_main_layout(self, canvas):  # to destroy the last canvas
+        def show_main_layout(self, canvas, canvas2=None):  # to destroy the last canvas
             self.canvas = canvas
             if self.canvas:
                 self.canvas.destroy()
@@ -428,8 +486,16 @@ class SDG_App:
             # Stop Mazegame timer if running
             if hasattr(self, 'Mazegame') and hasattr(self.Mazegame, 'finished'):
                 self.Mazegame.finished = True
-            self.layout(self.master, self.current_theme, self.mode, self.current_wall_index, self.current_character_index)
-      
+            
+            # Create new layout if not provided
+            if canvas2 == None:
+                self.layout(self.master, self.current_theme, self.mode, self.current_wall_index, self.current_character_index)
+            else:
+                self.setting_layout()
+
+        def play_sound(self):
+            self.button_sound.play()
+        
     class Mazegame:
         def __init__(self):
             # Removing recursion 
@@ -803,13 +869,13 @@ class SDG_App:
             row, col = self.player_pos
             new_row, new_col = row, col
 
-            if event.keysym == "Up":
+            if event.keysym == "Up" or event.keysym == "w" or event.keysym == "W":
                 new_row -= 1
-            elif event.keysym == "Down":
+            elif event.keysym == "Down" or event.keysym == "s" or event.keysym == "S":
                 new_row += 1
-            elif event.keysym == "Left":
+            elif event.keysym == "Left" or event.keysym == "a" or event.keysym == "A":
                 new_col -= 1
-            elif event.keysym == "Right":
+            elif event.keysym == "Right" or event.keysym == "d" or event.keysym == "D":
                 new_col += 1
 
             # Check if move is valid
@@ -823,13 +889,13 @@ class SDG_App:
                 self.check_item_collision(new_row, new_col)
 
                 # Check if player reached the end
-                if [new_row, new_col] == self.end_pos:
+                if [new_row, new_col] == self.end_pos and self.score == self.total_items:
                     self.end_game()
 
         def move_multiplayer(self, event):
             """Handle multiplayer movement"""
             # Player 1 controls (WASD)
-            if event.keysym in ["w", "s", "a", "d"] and not self.player1_finished:
+            if event.keysym in ["w", "s", "a", "d", "W", "S", "A", "D"] and not self.player1_finished:
                 self.move_player_mp(1, event.keysym)
             
             # Player 2 controls (Arrow keys)
@@ -849,23 +915,23 @@ class SDG_App:
 
             # Player 1 controls (WASD)
             if player == 1:
-                if key == "w":
+                if key == "w" or key == "W":
                     new_row -= 1
-                elif key == "s":
+                elif key == "s" or key == "S":
                     new_row += 1
-                elif key == "a":
+                elif key == "a" or key == "A":
                     new_col -= 1
-                elif key == "d":
+                elif key == "d" or key == "D":
                     new_col += 1
             # Player 2 controls (Arrow keys)
             else:
-                if key == "Up":
+                if key == "Up" or key == "W":
                     new_row -= 1
-                elif key == "Down":
+                elif key == "Down" or key == "S":
                     new_row += 1
-                elif key == "Left":
+                elif key == "Left" or key == "A":
                     new_col -= 1
-                elif key == "Right":
+                elif key == "Right" or key == "D":
                     new_col += 1
 
             # Check if move is valid
@@ -885,13 +951,13 @@ class SDG_App:
                 # Check if player reached the end
                 if self.maze[new_row][new_col] == "E":
                     if player == 1:
-                        if self.player1_score == self.total_items:  
+                        if self.player1_score == len(self.player1_lev_item_list):  
                             self.player1_finished = True
                         else:
                             self.maze_canvas.itemconfig(self.info_text1, 
                                             text="You have not collected all items!")
                     else:
-                        if self.player2_score == self.total_items:
+                        if self.player2_score == len(self.player2_lev_item_list):
                             self.player2_finished = True
                         else:
                             self.maze_canvas.itemconfig(self.info_text2, 
@@ -1053,12 +1119,13 @@ class SDG_App:
                     x, y = self.logical_to_canvas(item_pos[0], item_pos[1])
                     self.maze_canvas.coords(item_id, x, y)
 
-                self.item_frame_index = (self.item_frame_index + 1) % len(self.item_list[self.mode])
+                # Use the current item's image frames length (bucketed by level ranges)
+                self.item_frame_index = (self.item_frame_index + 1) % len(self.get_item_image())
                 
                 for i, item in enumerate(self.items):
                     if i < len(self.lev_item_list):
                         self.maze_canvas.itemconfig(item["id"], 
-                                                image=self.lev_item_list[i][self.item_frame_index])
+                                                    image=self.lev_item_list[i][self.item_frame_index])
 
             if not self.finished and not self.stop:
                 self.master.after(500, self.animate_item)
@@ -1274,7 +1341,15 @@ class SDG_App:
                                         self.selected_wall, self.selected_character, 
                                         self.current_theme, False)]
             )
+            back_button = Button(
+                fin_window, text="Back to Menu",
+                command=lambda: [fin_window.destroy(), 
+                            self.start(self.master, self.mode, self.maze_canvas, 
+                                        self.selected_wall, self.selected_character, 
+                                        self.current_theme, False)]
+            )
             nextLevelButton.pack(pady=13)
+            back_button.pack(pady=13)
 
         def update_timer(self):
             """Update timer for both modes"""
