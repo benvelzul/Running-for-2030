@@ -1414,4 +1414,7 @@ def main():
     root.mainloop()
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except:
+        print("Sorry I am a really bad coder")
