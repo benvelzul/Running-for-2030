@@ -461,7 +461,7 @@ class SDG_App:
                 self.cur_music = False
                 self.music_button.config(image=self.music_list[int(self.cur_music)])
                 return self.cur_music
-            
+
         def volume_update(self, volume):
             self.cur_volume = volume
 
@@ -486,6 +486,13 @@ class SDG_App:
             # Stop Mazegame timer if running
             if hasattr(self, 'Mazegame') and hasattr(self.Mazegame, 'finished'):
                 self.Mazegame.finished = True
+                self.Mazegame.stop = True
+                # Cancel the timer
+                if hasattr(self.Mazegame, 'timer_id'):
+                    try:
+                        self.master.after_cancel(self.Mazegame.timer_id)
+                    except:
+                        pass
             
             # Create new layout if not provided
             if canvas2 == None:
@@ -495,7 +502,7 @@ class SDG_App:
 
         def play_sound(self):
             self.button_sound.play()
-        
+             
     class Mazegame:
         def __init__(self):
             # Removing recursion 
@@ -518,6 +525,23 @@ class SDG_App:
                     "fg": "white"
                 }
             }
+            self.current_time = 0
+
+        def return_to_homepage(self):
+            """Properly stop the game and return to homepage"""
+            self.finished = True
+            self.stop = True
+            
+            # Cancel the timer
+            if hasattr(self, 'timer_id'):
+                try:
+                    self.master.after_cancel(self.timer_id)
+                except:
+                    pass
+            
+            # Return to homepage
+            self.current_time = None
+            self.HomePage.layout(self.master, self.current_theme, self.mode, self.selected_wall, self.selected_character)
 
         def init_homepage(self):
             if self.HomePage is None:
@@ -556,7 +580,7 @@ class SDG_App:
             
             # Time tracking
             self.start_time = None
-            self.time_limit = 100  # seconds
+            self.set_time_limit()  # Set time limit based on level
             self.start_time = time.time()
             self.master = master
             
@@ -631,7 +655,7 @@ class SDG_App:
             self.master.bind("<KeyPress>", self.move_player)
             self.master.bind("<space>", self.Menu)
             self.master.bind("<r>", lambda: self.start(self.master, self.mode, self.canvas, self.selected_wall, self.selected_character, self.current_theme, self.multiplayer))
-            self.master.bind("<Escape>", lambda: self.HomePage.layout(self.master, self.current_theme, self.mode, self.selected_wall, self.selected_character))
+            self.master.bind("<Escape>", lambda event: self.return_to_homepage())
             self.draw_maze()
             self.update_timer()
             self.animate_character()
@@ -639,7 +663,7 @@ class SDG_App:
             self.init_homepage()
 
         def init_multiplayer(self):
-            """Initialize multiplayer-specific variables"""
+            #Initialize multiplayer-specific variables
             # Player 1 (left maze)
             self.player1_pos = None
             self.player1_score = 0
@@ -659,7 +683,7 @@ class SDG_App:
             self.winner = None
 
         def init_singleplayer(self):
-            """Initialize single player variables"""
+            #Initialize single player variables
             self.player_pos = None
             self.end_pos = None
             self.items = []
@@ -668,7 +692,7 @@ class SDG_App:
             self.lev_item_list = []
 
         def setup_ui(self):
-            """Setup UI elements based on game mode"""
+            # Setup UI elements based on game mode
             if self.multiplayer:
                 # Player 1 score (left side)
                 self.score1_text = self.maze_canvas.create_text(
@@ -833,16 +857,28 @@ class SDG_App:
             
             self.total_items += 1
 
+        def set_time_limit(self):
+            """Set time limit based on current level"""
+            if self.mode >= 12:
+                self.time_limit = 200
+            elif self.mode >= 9:
+                self.time_limit = 150
+            elif self.mode >= 6:
+                self.time_limit = 120
+            elif self.mode >= 3:
+                self.time_limit = 100
+            elif self.mode >= 0:
+                self.time_limit = 100
+            else:
+                self.time_limit = 100
+
         def get_item_image(self):
             """Get appropriate item image based on mode"""
             if self.mode >= 12:
                 item_image = self.item_list[4][randint(0, 1)]
-                self.time_limit = 200
             elif self.mode >= 9:
-                self.time_limit = 150
                 item_image = self.item_list[3]
             elif self.mode >= 6:
-                self.time_limit = 120
                 item_image = self.item_list[2]
             elif self.mode >= 3:
                 item_image = self.item_list[1]
@@ -1318,7 +1354,7 @@ class SDG_App:
             except:
                 highscore = score
                 
-            message_str = f"Congratulations!\nYou've completed the maze!\nItems collected: {self.score}/{self.total_items} \nTime used {self.total_time} seconds \nTotal score: {(self.score * 100) + ((150 - self.total_time) * 5)}, Highest score: {highscore}"
+            message_str = f"Congratulations!\nYou've completed the maze!\nItems collected: {self.score}/{self.total_items} \nTime used {self.total_time} seconds \nTotal score: {(self.score * 100) + ((self.time_limit - self.total_time) * 5)}, Highest score: {highscore}"
             fin_window = Toplevel(self.master)
             self.finished = True
             message = Label(fin_window, text=message_str, font=('Arial', 16), pady=20, padx=20)
@@ -1355,9 +1391,12 @@ class SDG_App:
             if self.maze_canvas is None or self.finished or self.stop:
                 return
             
-            current_time = int(time.time() - self.start_time)
+            if self.current_time is None:
+                self.current_time = int(time.time() - self.start_time)
+            else:
+                self.current_time = int(time.time() - self.start_time)
             
-            if current_time >= self.time_limit:
+            if self.current_time >= self.time_limit:
                 self.stop = True
                 self.finished = True
                 
@@ -1369,7 +1408,7 @@ class SDG_App:
                 else:
                     self.show_single_timeout()
             else:
-                self.maze_canvas.itemconfig(self.time_text, text=f"Time: {current_time} seconds")
+                self.maze_canvas.itemconfig(self.time_text, text=f"Time: {self.current_time} seconds")
                 self.timer_id = self.master.after(1000, self.update_timer)
 
         def show_single_timeout(self):
@@ -1413,7 +1452,4 @@ def main():
     root.mainloop()
 
 if __name__ == "__main__":
-    try:
-        main()
-    except Exception:
-        print("Sorry, I am a bad coder")
+    main()
