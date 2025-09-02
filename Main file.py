@@ -47,8 +47,8 @@ class SDG_App:
             # Remove the recursive initialization
             self.Mazegame = None
             pygame.mixer.init()
-            pygame.mixer.music.load("Music\Backtrack.mp3")
-            self.button_sound = pygame.mixer.Sound("Music\Button sound.mp3")
+            self.music = pygame.mixer.music.load("Music\\Backtrack.mp3")
+            self.button_sound = pygame.mixer.Sound("Music\\Button sound.mp3")
             pygame.mixer.music.play(-1)
             pygame.mixer.music.set_volume(0.7)
             pygame.mixer.music.unpause()
@@ -59,7 +59,7 @@ class SDG_App:
                 self.Mazegame = SDG_App.Mazegame()
                 self.is_multiplayer = False
 
-        def layout(self, master, theme, mode= 0, current_wall_index=0, current_character_index=0, event=None):
+        def layout(self, master, theme, mode= 0, current_wall_index=0, current_character_index=0):
             self.current_theme = theme
             self.master = master
             self.mode = mode
@@ -96,7 +96,8 @@ class SDG_App:
                     self.current_wall_index, 
                     self.current_character_index, 
                     self.current_theme, 
-                    self.is_multiplayer  # Pass the multiplayer flag
+                    self.is_multiplayer,  # Pass the multiplayer flag
+                    self.cur_volume
                 )], 
                 font=("Comic Sans MS", 12), 
                 bg=theme["button"], 
@@ -118,10 +119,10 @@ class SDG_App:
 
             #customization and maze game images
             self.wall_images = [
-                PhotoImage(file=r"Images\Wall #1.png").subsample(35),
-                ImageTk.PhotoImage((Image.open(r"Images\Wall #2.jpg").resize((50, 50))), Image.Resampling.LANCZOS),
-                ImageTk.PhotoImage((Image.open(r"Images\Wall #3.jpg").resize((50, 50))), Image.Resampling.LANCZOS),
-                ImageTk.PhotoImage((Image.open(r"Images\Wall #4.jpg").resize((50, 50))), Image.Resampling.LANCZOS)
+                ImageTk.PhotoImage((Image.open(r"Images\Wall #1.png").resize((50, 50))), Image.Resampling.LANCZOS),
+                ImageTk.PhotoImage((Image.open(r"Images\Wall #2.png").resize((50, 50))), Image.Resampling.LANCZOS),
+                ImageTk.PhotoImage((Image.open(r"Images\Wall #3.png").resize((50, 50))), Image.Resampling.LANCZOS),
+                ImageTk.PhotoImage((Image.open(r"Images\Wall #4.png").resize((50, 50))), Image.Resampling.LANCZOS)
             ]
             self.char1_frames = self.load_gif_frames(r"Images\Character #1.gif")
             self.char2_frames = self.load_gif_frames(r"Images\Character #2.gif")
@@ -336,10 +337,6 @@ class SDG_App:
             self.customize_canvas.place(x=152, y=150)
             self.customize_canvas.create_text(200, 50, text="Customization", font=("Comic Sans MS", 14), fill=theme["text"])
 
-            # Initialize indices
-            self.current_wall_index = 0
-            self.current_character_index = 0
-
             # Back button
             back_button = Button(self.customize_canvas, text="Confirm", command=lambda: [self.play_sound(), self.show_main_layout(self.customize_canvas)],bg=theme["button"], fg=theme["text"])
             self.customize_canvas.create_window(200, 270, window=back_button)
@@ -456,10 +453,14 @@ class SDG_App:
             if self.cur_music == False: 
                 self.cur_music = True
                 self.music_button.config(image=self.music_list[int(self.cur_music)])
+                pygame.mixer.music.set_volume(0)
+                pygame.mixer.music.pause()
                 return self.cur_music
             else:
                 self.cur_music = False
                 self.music_button.config(image=self.music_list[int(self.cur_music)])
+                pygame.mixer.music.set_volume(0.7)
+                pygame.mixer.music.unpause()
                 return self.cur_music
 
         def volume_update(self, volume):
@@ -469,13 +470,11 @@ class SDG_App:
                 self.cur_volume = True
                 self.volume_button.config(image=self.volume_list[int(self.cur_volume)])
                 pygame.mixer.music.set_volume(0)
-                pygame.mixer.music.pause()
                 return self.cur_volume
             else:
                 self.cur_volume = False
                 self.volume_button.config(image=self.volume_list[int(self.cur_volume)])
                 pygame.mixer.music.set_volume(0.7)
-                pygame.mixer.music.unpause()
                 return self.cur_volume
 
         def show_main_layout(self, canvas, canvas2=None):  # to destroy the last canvas
@@ -501,7 +500,10 @@ class SDG_App:
                 self.setting_layout()
 
         def play_sound(self):
-            self.button_sound.play()
+            if self.cur_volume == False:
+                self.button_sound.play()
+            else:
+                return
              
     class Mazegame:
         def __init__(self):
@@ -526,9 +528,10 @@ class SDG_App:
                 }
             }
             self.current_time = 0
+            self.button_sound = pygame.mixer.Sound("Music\\Button sound.mp3")
 
         def return_to_homepage(self):
-            """Properly stop the game and return to homepage"""
+            #Properly stop the game and return to homepage
             self.finished = True
             self.stop = True
             
@@ -547,9 +550,10 @@ class SDG_App:
             if self.HomePage is None:
                 self.HomePage = SDG_App.Applayout()
 
-        def start(self, master, mode, canvas, current_wall_i, current_char_i, theme, multiplayer=False, event=None):
+        def start(self, master, mode, canvas, current_wall_i, current_char_i, theme, multiplayer=False, cur_volume=False):
             # Theme setup
             self.current_theme = theme
+            self.og_mode = mode
             self.mode = mode
             self.multiplayer = multiplayer
             self.themes = self.themes_1[self.current_theme]
@@ -559,6 +563,7 @@ class SDG_App:
             self.maze = self.maze_levels[self.mode]
             self.stop = False
             self.finished = False
+            self.cur_volume = cur_volume
             
             # Canvas calculations - adjust for multiplayer
             self.HEIGHT = 600
@@ -653,9 +658,7 @@ class SDG_App:
             
             # Bind keys and initialize game
             self.master.bind("<KeyPress>", self.move_player)
-            self.master.bind("<space>", self.Menu)
-            self.master.bind("<r>", lambda: self.start(self.master, self.mode, self.canvas, self.selected_wall, self.selected_character, self.current_theme, self.multiplayer))
-            self.master.bind("<Escape>", lambda event: self.return_to_homepage())
+            self.master.bind("<space>", lambda event: [self.play_sound(), self.Menu()])
             self.draw_maze()
             self.update_timer()
             self.animate_character()
@@ -745,12 +748,12 @@ class SDG_App:
                 )
 
             # Menu button
-            menu = Button(self.master, text="⏸", command=self.Menu, 
+            menu = Button(self.master, text="⏸", command=lambda: [self.play_sound(), self.Menu()], 
                         bg=self.themes["button"], fg=self.themes["text"])
             self.maze_canvas.create_window(int(self.WIDTH * 0.95), int(self.HEIGHT / 28), window=menu)
 
         def logical_to_canvas(self, row, col, player=1):
-            """Convert logical maze coordinates to canvas pixel coordinates"""
+            #Convert logical maze coordinates to canvas pixel coordinates
             if self.multiplayer and player == 2:
                 # Right maze for player 2
                 x = (col * self.cell_size_x) + self.maze_width + int(self.cell_size_x / 2)
@@ -762,20 +765,27 @@ class SDG_App:
             return x, y
 
         def draw_maze(self):
-            """Draw maze(s) based on game mode"""
+            #Draw maze(s) based on game mode
             if self.multiplayer:
                 self.draw_multiplayer_mazes()
             else:
                 self.draw_single_maze()
 
         def draw_single_maze(self):
-            """Draw single maze (original functionality)"""
+            #Draw single maze (original functionality)
             for row in range(len(self.maze)):
                 for col in range(len(self.maze[row])):
                     x1 = col * self.cell_size_x
                     y1 = row * self.cell_size_y + int(self.HEIGHT / 14)
                     x2 = x1 + self.cell_size_x
                     y2 = y1 + self.cell_size_y
+
+                    if self.maze[row][col] != "W":
+                        if self.wall_image == self.wall_images[-1]:
+                            cx, cy = self.logical_to_canvas(row, col)
+                            self.maze_canvas.create_image(cx, cy, image=self.floor_1)
+                        else:
+                            pass
 
                     if self.maze[row][col] == "W":
                         cx, cy = self.logical_to_canvas(row, col)
@@ -791,7 +801,7 @@ class SDG_App:
                         self.add_item(row, col, x1, y1, x2, y2)
 
         def draw_multiplayer_mazes(self):
-            """Draw two identical mazes side by side"""
+            #Draw two identical mazes side by side
             # Draw left maze (Player 1)
             for row in range(len(self.maze)):
                 for col in range(len(self.maze[row])):
@@ -833,7 +843,7 @@ class SDG_App:
                         self.add_multiplayer_item(row, col, 2)
 
         def add_item(self, row, col, x1, y1, x2, y2):
-            """Add item for single player mode"""
+            #Add item for single player mode
             item_image = self.get_item_image()
             cx, cy = self.logical_to_canvas(row, col)
             item_id = self.maze_canvas.create_image(cx, cy, image=item_image[0])
@@ -843,7 +853,7 @@ class SDG_App:
             self.total_items += 1
 
         def add_multiplayer_item(self, row, col, player):
-            """Add item for multiplayer mode"""
+            #Add item for multiplayer mode
             item_image = self.get_item_image()
             cx, cy = self.logical_to_canvas(row, col, player)
             item_id = self.maze_canvas.create_image(cx, cy, image=item_image[0])
@@ -858,7 +868,7 @@ class SDG_App:
             self.total_items += 1
 
         def set_time_limit(self):
-            """Set time limit based on current level"""
+            #Set time limit based on current level
             if self.mode >= 12:
                 self.time_limit = 200
             elif self.mode >= 9:
@@ -873,7 +883,7 @@ class SDG_App:
                 self.time_limit = 100
 
         def get_item_image(self):
-            """Get appropriate item image based on mode"""
+            #Get appropriate item image based on mode
             if self.mode >= 12:
                 item_image = self.item_list[4][randint(0, 1)]
             elif self.mode >= 9:
@@ -890,7 +900,7 @@ class SDG_App:
             return item_image
 
         def move_player(self, event):
-            """Handle player movement for both single and multiplayer"""
+            #Handle player movement for both single and multiplayer
             if self.finished or self.stop:
                 return
 
@@ -900,7 +910,7 @@ class SDG_App:
                 self.move_singleplayer(event)
 
         def move_singleplayer(self, event):
-            """Original single player movement"""
+            #Single player movement
             row, col = self.player_pos
             new_row, new_col = row, col
 
@@ -927,8 +937,10 @@ class SDG_App:
                 if [new_row, new_col] == self.end_pos and self.score == self.total_items:
                     self.end_game()
 
+            self.maze_canvas.tag_raise(self.player)
+
         def move_multiplayer(self, event):
-            """Handle multiplayer movement"""
+            #Handle multiplayer movement
             # Player 1 controls (WASD)
             if event.keysym in ["w", "s", "a", "d", "W", "S", "A", "D"] and not self.player1_finished:
                 self.move_player_mp(1, event.keysym)
@@ -938,7 +950,7 @@ class SDG_App:
                 self.move_player_mp(2, event.keysym)
 
         def move_player_mp(self, player, key):
-            """Move specific player in multiplayer"""
+            #Move specific player in multiplayer
             if player == 1:
                 row, col = self.player1_pos
                 player_obj = self.player1
@@ -1001,7 +1013,7 @@ class SDG_App:
                     self.check_multiplayer_end()
 
         def check_multiplayer_item_collision(self, row, col, player):
-            """Check item collision for multiplayer"""
+            #Check item collision for multiplayer
             if player == 1:
                 items_list = self.player1_items
                 score_text = self.score1_text
@@ -1029,7 +1041,7 @@ class SDG_App:
             return False
 
         def check_multiplayer_end(self):
-            """Check if multiplayer game should end"""
+            #Check if multiplayer game should end
             if self.player1_finished or self.player2_finished:
                 self.finished = True
                 self.stop = True
@@ -1060,7 +1072,7 @@ class SDG_App:
                 self.show_multiplayer_end(winner_text)
 
         def show_multiplayer_end(self, winner_text):
-            """Show multiplayer end screen"""
+            #Show multiplayer end screen
             message_str = f"{winner_text}\n\nPlayer 1 Score: {self.player1_score}\nPlayer 2 Score: {self.player2_score}\nTime: {self.total_time} seconds"
             
             fin_window = Toplevel(self.master)
@@ -1088,7 +1100,7 @@ class SDG_App:
             next_level_button.pack(pady=5)
 
         def animate_character(self):
-            """Animate characters for both modes"""
+            #Animate characters for both modes
             if not hasattr(self, 'character_frame_index'):
                 self.character_frame_index = 0
 
@@ -1114,7 +1126,7 @@ class SDG_App:
                 self.master.after(500, self.animate_character)
 
         def animate_item(self):
-            """Animate items for both modes"""
+            #Animate items for both modes
             if not hasattr(self, 'item_frame_index'):
                 self.item_frame_index = 0
 
@@ -1166,6 +1178,7 @@ class SDG_App:
                 self.master.after(500, self.animate_item)
 
         def Menu(self, event=None):
+            self.mode = self.og_mode
             if hasattr(self, 'menu_canvas') and self.menu_canvas:
                 self.close_menu()
                 return
@@ -1180,24 +1193,22 @@ class SDG_App:
             self.menu_canvas.place(x=self.WIDTH/2, y=self.HEIGHT/2, anchor="center")
             
             homepage = Button(self.master, text="Home", 
-                            command=lambda: [self.close_menu(), 
-                            self.HomePage.layout(self.master, self.current_theme, 
-                            self.mode, self.selected_wall, 
-                            self.selected_character)], 
+                            command=lambda: [self.close_menu(), self.play_sound(), 
+                            self.return_to_homepage()], 
                             bg=self.themes["bg"], fg=self.themes["fg"])
-            resume_button = Button(self.master, image=self.playbutton, command=self.close_menu, 
+            resume_button = Button(self.master, image=self.playbutton, command=lambda: [self.close_menu(), self.play_sound()], 
                                 bg=self.themes["bg"], fg=self.themes["fg"])
-            up_level = Button(self.master, text=">", command=self.up_level, 
+            up_level = Button(self.master, text=">", command=lambda: [self.play_sound(), self.up_level()], 
                             bg=self.themes["bg"], fg=self.themes["fg"])
-            down_level = Button(self.master, text="<", command=self.down_level, 
+            down_level = Button(self.master, text="<", command=lambda: [self.play_sound(), self.down_level()], 
                             bg=self.themes["bg"], fg=self.themes["fg"])
             multiplayer = Button(self.master, text="Toggle Multiplayer", 
-                            command=lambda: [self.close_menu(), 
+                            command=lambda: [self.close_menu(), self.play_sound(),
                                             self.start(self.master, self.mode, self.maze_canvas, 
                                                     self.selected_wall, self.selected_character, 
                                                     self.current_theme, not self.multiplayer)], 
                             bg=self.themes["bg"], fg=self.themes["fg"])
-            play = Button(self.master, text="Play", command=lambda: [self.close_menu(), self.start(self.master, self.mode, self.maze_canvas,          self.selected_wall, self.selected_character, self.current_theme, self.multiplayer)], bg=self.themes["bg"], fg=self.themes["fg"])
+            play = Button(self.master, text="Play", command=lambda: [self.close_menu(), self.play_sound(), self.start(self.master, self.mode, self.maze_canvas, self.selected_wall, self.selected_character, self.current_theme, self.multiplayer, self.cur_volume)], bg=self.themes["bg"], fg=self.themes["fg"])
 
             self.menu_canvas.create_text(150, 30, text="Paused", font=("Comic Sans MS", 16), fill=self.themes["text"])
 
@@ -1222,35 +1233,44 @@ class SDG_App:
 
         def close_menu(self):
             if hasattr(self, 'menu_canvas') and self.menu_canvas:
-                self.menu_canvas.destroy()
-                self.menu_canvas = None
+                try:
+                    if self.menu_canvas.winfo_exists():
+                        self.menu_canvas.destroy()
+                except:
+                    pass
+                finally:
+                    self.menu_canvas = None
             
             # Resume the game
             if not self.finished:
                 self.stop = False
                 # Adjust the start time to account for paused time
-                self.start_time = time.time() - self.paused_time
+                if hasattr(self, 'paused_time'):
+                    self.start_time = time.time() - self.paused_time
                 
                 # Restart animations and timer
                 self.animate_character()
+                self.animate_item()  # Don't forget this
                 self.update_timer()
-            else:
-                self.finished = True
-                self.stop = True
-                self.maze_canvas = None
-                if hasattr(self, 'timer_id'):
-                    self.master.after_cancel(self.timer_id)
 
+        def play_sound(self):
+            if self.cur_volume == False:
+                self.button_sound.play()
+            else:
+                return
+    
         def load_images(self):
             self.frameCnt = 2
             # Customization and maze game images
-            self.wall_1 = PhotoImage(file=r"Images\Wall #1.png")
-            self.wall_2 = Image.open(r"Images\Wall #2.jpg")
-            self.wall_3 = Image.open(r"Images\Wall #3.jpg")
-            self.wall_4 = Image.open(r"Images\Wall #4.jpg")
+            self.wall_1 = Image.open(r"Images\Wall #1.png")
+            self.wall_2 = Image.open(r"Images\Wall #2.png")
+            self.wall_3 = Image.open(r"Images\Wall #3.png")
+            self.wall_4 = Image.open(r"Images\Wall #4.png")
+
+            self.floor_1 = ImageTk.PhotoImage(Image.open(r"Images\Floor #1.png").resize((self.cell_size_x, self.cell_size_y)), Image.Resampling.LANCZOS)
 
             self.wall_images = [
-                self.wall_1.subsample(int(self.wall_1.width()/self.cell_size_x), int(self.wall_1.height()/self.cell_size_y)),
+                ImageTk.PhotoImage(self.wall_1.resize((self.cell_size_x, self.cell_size_y)), Image.Resampling.LANCZOS),
                 ImageTk.PhotoImage(self.wall_2.resize((self.cell_size_x, self.cell_size_y)), Image.Resampling.LANCZOS),
                 ImageTk.PhotoImage(self.wall_3.resize((self.cell_size_x, self.cell_size_y)), Image.Resampling.LANCZOS),
                 ImageTk.PhotoImage(self.wall_4.resize((self.cell_size_x, self.cell_size_y)), Image.Resampling.LANCZOS)
@@ -1270,7 +1290,7 @@ class SDG_App:
             self.item_list = [self.item1, self.item2, self.item3, self.item4, [self.item5, self.item6]]
             self.item_indices = [12, 9, 6, 3, 0]
 
-            self.playbutton = (PhotoImage(file=r"Images\Play button.png")).subsample(5)
+            self.playbutton = PhotoImage(file=r"Images\Play button.png")
 
         def load_gif_frames(self, path):
             gif = Image.open(path)
@@ -1285,7 +1305,7 @@ class SDG_App:
             return frames
 
         def check_item_collision(self, row, col):
-            """Single player item collision (original)"""
+            #Single player item collision (original)
             for item in self.items[:]:
                 if item["pos"] == [row, col]:
                     self.maze_canvas.delete(item["id"])
@@ -1298,7 +1318,7 @@ class SDG_App:
             return False
 
         def show_item_message(self):
-            """Show item collection message (single player only)"""
+            #Show item collection message (single player only)
             if self.finished or self.stop or self.multiplayer:
                 return
             if hasattr(self, 'info_window') and self.info_window:
@@ -1329,7 +1349,7 @@ class SDG_App:
                 self.update_timer()
 
         def end_game(self):
-            """End single player game"""
+            #End single player game 
             self.finished = True
             self.stop = True
             
@@ -1340,8 +1360,8 @@ class SDG_App:
                     pass
 
             self.end_time = time.time()
-            self.total_time = round(self.end_time - self.start_time)
-            score = int(self.score * 100) + ((150 - self.total_time) * 5)
+            self.total_time = round(self.end_time - self.start_time, 2)
+            score = int(self.score * 100) + ((self.time_limit - self.total_time) * 5)
             
             try:
                 df = pd.read_csv("highscores.csv")
@@ -1354,45 +1374,59 @@ class SDG_App:
             except:
                 highscore = score
                 
-            message_str = f"Congratulations!\nYou've completed the maze!\nItems collected: {self.score}/{self.total_items} \nTime used {self.total_time} seconds \nTotal score: {(self.score * 100) + ((self.time_limit - self.total_time) * 5)}, Highest score: {highscore}"
-            fin_window = Toplevel(self.master)
-            self.finished = True
-            message = Label(fin_window, text=message_str, font=('Arial', 16), pady=20, padx=20)
-            message.pack()
+            self.info_canvas = Canvas(self.master, height=300, width=300, bg=self.themes["overlap"])
+            self.info_canvas.place(x=self.WIDTH / 2, y=self.HEIGHT / 2, anchor="center")
 
+            self.info_canvas.create_text(150, 30, text="Congratulations!", justify="center", font=("Comic Sans MS", 16), fill=self.themes["text"])
+            self.info_canvas.create_text(150, 70, text="You've completed the maze!", justify="center", font=("Comic Sans MS", 14), fill=self.themes["text"])
+            self.info_canvas.create_text(150, 110, anchor="n", width=250, text=f"In {self.total_time} seconds. \nYour score is {score}. \nHighscore: {highscore}", justify="center", font=('Comic Sans MS', 12), fill=self.themes["text"])
             restart_button = Button(
-                fin_window, text="Play Again", 
-                command=lambda: [fin_window.destroy(), 
+                    self.info_canvas, text="Play Again", 
+                    command=lambda: [self.info_canvas.destroy(), 
                             self.start(self.master, self.mode, self.maze_canvas, 
-                                        self.selected_wall, self.selected_character, 
-                                        self.current_theme, False)]
-            )
-            restart_button.pack(pady=10)
-
-            nextLevelButton = Button(
-                fin_window, text="Next Level",
-                command=lambda: [fin_window.destroy(), 
-                            self.start(self.master, (self.mode+1), self.maze_canvas, 
-                                        self.selected_wall, self.selected_character, 
-                                        self.current_theme, False)]
+                            self.selected_wall, self.selected_character, 
+                            self.current_theme, False)], font=('Comic Sans MS', 9), bg=self.themes["button"], fg=self.themes["text"]
             )
             back_button = Button(
-                fin_window, text="Back to Menu",
-                command=lambda: [fin_window.destroy(), 
+                    self.info_canvas, text="Back to Menu",
+                    command=lambda: [self.info_canvas.destroy(), 
                             self.Homepage.layout(self.master, self.mode, self.maze_canvas, 
-                                        self.selected_wall, self.selected_character, 
-                                        self.current_theme, self.multiplayer)]
+                            self.selected_wall, self.selected_character, 
+                            self.current_theme, self.multiplayer)], font=('Comic Sans MS', 9), bg=self.themes["button"], fg=self.themes["text"]
             )
-            nextLevelButton.pack(pady=13)
-            back_button.pack(pady=13)
+            nextLevelButton = Button(
+                    self.info_canvas, text="Next Level",
+                    command=lambda: [self.info_canvas.destroy(), 
+                            self.start(self.master, (self.mode+1), self.maze_canvas, 
+                            self.selected_wall, self.selected_character, 
+                            self.current_theme, False)], font=('Comic Sans MS', 9), bg=self.themes["button"], fg=self.themes["text"]
+            )
+            credits_button = Button(
+                    self.info_canvas, text="Credits",
+                    command=lambda: [self.info_canvas.destroy(), 
+                            self.credits_layout(self.master, self.mode, self.maze_canvas, 
+                            self.selected_wall, self.selected_character, 
+                            self.current_theme, False)], font=('Comic Sans MS', 9), bg=self.themes["button"], fg=self.themes["text"]
+            )
+
+            if self.og_mode == 14:              
+                self.info_canvas.create_text(150, 200, text="You have finished the game.", font=("Comic Sans MS", 14), fill=self.themes["text"])
+                self.info_canvas.create_window(150, 235, window=credits_button)
+            else:
+                self.info_canvas.create_window(150, 200, window=nextLevelButton)
+                self.info_canvas.create_window(150, 235, window=restart_button)
+                self.info_canvas.create_window(150, 270, window=back_button)
 
         def update_timer(self):
-            """Update timer for both modes"""
-            if self.maze_canvas is None or self.finished or self.stop:
+            #Update timer for both modes
+            if not hasattr(self, 'maze_canvas') or self.maze_canvas is None or self.finished or self.stop:
                 return
-            
-            if self.current_time is None:
-                self.current_time = int(time.time() - self.start_time)
+    
+            if not hasattr(self, 'current_time') or self.current_time is None:
+                if hasattr(self, 'timer_id') and self.timer_id:
+                    self.master.after_cancel(self.timer_id)
+                    self.timer_id = None
+                return
             else:
                 self.current_time = int(time.time() - self.start_time)
             
@@ -1408,29 +1442,67 @@ class SDG_App:
                 else:
                     self.show_single_timeout()
             else:
-                self.maze_canvas.itemconfig(self.time_text, text=f"Time: {self.current_time} seconds")
-                self.timer_id = self.master.after(1000, self.update_timer)
+                try:
+                    if self.timer_id is None:
+                        self.master.after_cancel(self.timer_id)
+                    else:
+                        self.maze_canvas.itemconfig(self.time_text, text=f"Time: {self.current_time} seconds")
+                        self.timer_id = self.master.after(1000, self.update_timer)
+                except:
+                    self.maze_canvas.itemconfig(self.time_text, text=f"Time: {self.current_time} seconds")
+                    self.timer_id = self.master.after(1000, self.update_timer)
+
+        def credits_layout(self):
+            theme = self.themes[self.current_theme]
+            self.credits_canvas = Canvas(self.master, height=300, width=400, bg=theme["overlap"])
+            self.credits_canvas.place(x=175, y=150)
+            self.credits_canvas.create_text(200, 30, text="Made by: Ben and Zander", font=("Comic Sans MS", 14), fill=theme["text"])
+            
+            # Create a frame for the scrollable text
+            credits_frame = Frame(self.credits_canvas, bg=theme["overlap"])
+            self.credits_canvas.create_window(200, 150, window=credits_frame, width=350, height=180)
+            
+            credits_text = scrolledtext.ScrolledText(
+                credits_frame,
+                width=40,
+                height=10,
+                wrap=tk.WORD,
+                font=("Comic Sans MS", 9),
+                bg=theme["canvas"],
+                fg=theme["text"],
+                insertbackground=theme["text"]
+            )
+            credits_text.pack(fill=tk.BOTH, expand=True)
+            
+            # Credits content
+            credits_content = "Benjamin Velez Zuluaga - Coder and team member \nZander Setiawan - Video, visual and audio designer and team member \nAlexander Sabariz - Tester \nTatiana Zuluaga Garcia - Tester \nSebastien Nagy - Tester \nXavior Green - Tester \nJake Blomfield - Tester \nHayden Fowler - Tester \nTracey Iki - Teacher \nJose Fuentes - Teacher \nPaul Benni - Mentor and tester \n\nSites and platforms: \nPiskel (https://piskelapp.com/) - Animation \nXmind (https://xmind.net/) - Mindmaping \nGitHub (https://github.com/) - Version control \nVs code (https://code.visualstudio.com/) - Code editor \nCursor (https://cursor.com/) - Code editor \nWindsurf (https://windsurfrs.com/) - Code editor \nCEDR (https://cedr.com/) - School"
+            
+            credits_text.insert(tk.END, credits_content)
+            credits_text.config(state=tk.DISABLED)
+            
+            back_button = Button(self.credits_canvas, text="Back to home", command=lambda: [self.play_sound(), self.credits_canvas.destroy(), self.return_to_homepage()], bg=theme["button"], fg=theme["text"])
+            self.credits_canvas.create_window(200, 260, window=back_button)
 
         def show_single_timeout(self):
-            """Show timeout for single player"""
-            game_over_win = Canvas(self.master, width= 300, height=300, bg=self.themes["overlap"])
-            game_over_win.place(x=self.WIDTH / 2, y=self.HEIGHT / 2, anchor="center")
-            game_over_win.create_text(150, 30, text="Game Over", font= ('Comic Sans MS', 16), fill=self.themes['text'])
+            #Show timeout for single player
+            self.game_over_win = Canvas(self.master, width= 300, height=300, bg=self.themes["overlap"])
+            self.game_over_win.place(x=self.WIDTH / 2, y=self.HEIGHT / 2, anchor="center")
+            self.game_over_win.create_text(150, 30, text="Game Over", font= ('Comic Sans MS', 16), fill=self.themes['text'])
             
-            game_over_win.create_text(150, 150, anchor='center', text=f"Time's up!\nItems collected: {self.score}/{self.total_items}", font=('Comic Sans MS', 12), fill=self.themes['text'])
+            self.game_over_win.create_text(150, 150, anchor='center', text=f"Time's up!\nItems collected: {self.score}/{self.total_items}", font=('Comic Sans MS', 12), fill=self.themes['text'])
 
             restart_button = Button(
-                game_over_win,
+                self.game_over_win,
                 text="Play Again",
-                command=lambda: [game_over_win.destroy(), 
+                command=lambda: [self.game_over_win.destroy(), 
                             self.start(self.master, self.mode, self.maze_canvas, 
                                         self.selected_wall, self.selected_character, 
-                                        self.current_theme, False)]
+                                        self.current_theme, False)], font=('Comic Sans MS', 12), bg=self.themes["button"], fg=self.themes["text"]
             )
-            game_over_win.create_window(150, 200, window=restart_button)
+            self.game_over_win.create_window(150, 200, window=restart_button)
 
         def show_multiplayer_timeout(self):
-            """Show timeout for multiplayer"""
+            #Show timeout for multiplayer
             if self.player1_score > self.player2_score:
                 winner_text = "Player 1 Wins by Score!"
             elif self.player2_score > self.player1_score:
